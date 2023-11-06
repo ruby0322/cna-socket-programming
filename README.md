@@ -1,4 +1,4 @@
-# 💰 A Secure Person2Person (P2P) Micropayment System
+# 💰 A Secure P2P Micropayment System
 
 ## Project Overview 🚀
 
