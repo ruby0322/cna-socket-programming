@@ -5,7 +5,7 @@
     #include "User.hpp"
 #endif
 #ifndef UTILS_HPP
-    #include "../utils.hpp"
+    #include "../shared/utils.hpp"
 #endif
 
 #include <iostream>

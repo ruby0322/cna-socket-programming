@@ -8,7 +8,7 @@
 #include <pthread.h>
 #include <map>
 #include <set>
-#include "../Logger.hpp"
+#include "../shared/Logger.hpp"
 #include "User.hpp"
 
 namespace Code {

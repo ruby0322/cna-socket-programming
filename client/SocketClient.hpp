@@ -8,13 +8,13 @@
 #include <string.h>
 #include <map>
 #ifndef ADDRESS_HPP
-  #include "../Address.hpp"
+  #include "../shared/Address.hpp"
 #endif
 #ifndef UTILS_HPP
-  #include "../utils.hpp"
+  #include "../shared/utils.hpp"
 #endif
 #ifndef LOGGER_HPP
-  #include "../Logger.hpp"
+  #include "../shared/Logger.hpp"
 #endif
 
 class SocketClient { 
