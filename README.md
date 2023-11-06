@@ -6,39 +6,37 @@ This project is a secure Person-to-Person (P2P) micropayment system implemented 
 
 ## Project Features ⭐
 
-### Socket Client
+### Socket Client:
 
-1. **Initialization:** The Socket Client is responsible for connecting to the server and managing communication with it.
+- **Responsibility:** The Socket Client component is responsible for connecting to the server and facilitating communication between the client and the server.
 
-2. **Command-Line Interface:** It provides a command-line interface for user interaction. Users can log in, register, list online users, make micropayments, and exit using different commands.
+- **Key Functions:**
+  1. **Initialization:** It sets up a connection to the server and manages communication through sockets.
+  2. **Command-Line Interface:** Provides a user-friendly command-line interface for user interaction, allowing actions like logging in, registration, listing online users, micropayments, and exiting.
+  3. **P2P Listening:** Enables the client to listen on a specific port for incoming P2P connections.
+  4. **Message Transfer:** Communicates with the server by sending user commands and micropayment requests.
 
-3. **Connection:** The client connects to the server using a socket and sends and receives messages to and from the server.
+### Socket Server:
 
-4. **Listening for P2P:** The client can initiate P2P listening on a specific port, allowing other users to connect to it for micropayments.
+- **Responsibility:** The Socket Server component serves as the central hub for handling client connections and micropayment transactions.
 
-5. **Communication:** It sends user commands and micropayment requests to the server, which processes these requests.
+- **Key Functions:**
+  1. **Initialization:** Sets up the server to listen for incoming connections from multiple clients.
+  2. **Connection Handling:** Manages concurrent connections from multiple clients, enabling real-time communication.
+  3. **User Management:** Handles user registration, ensuring unique and valid usernames.
+  4. **Online User List:** Maintains and provides an online user list, which clients can request.
+  5. **Micropayments:** Processes micropayment requests, verifies balances, and performs secure transfers between users.
 
-6. **Thread Handling:** The client manages multiple threads for listening to incoming connections and handling user commands simultaneously.
+### Shared:
 
-### Socket Server
+- **Purpose:** The Shared component contains shared code and utility classes used by both the Socket Client and Socket Server.
 
-1. **Initialization:** The Socket Server initializes and sets up the server to listen for incoming connections.
+- **Key Elements:**
+  1. **Logging:** Provides logging functionality to record events and interactions for auditing and debugging.
+  2. **Thread Handling:** Manages multiple threads for concurrent execution of tasks across the entire project.
+  3. **Utils:** Contains utility functions used across the project, aiding in parsing, validation, and other common tasks.
 
-2. **Connection Handling:** It listens for incoming connections from multiple clients using sockets and handles these connections concurrently.
-
-3. **User Registration:** The server handles user registration, ensuring that usernames are unique and valid.
-
-4. **User Login:** When a user logs in, the server tracks their connection and allows them to interact with other users.
-
-5. **Online User List:** It maintains an online user list, which can be requested by clients, and sends this list to clients when requested.
-
-6. **Micropayments:** The server processes micropayment requests from clients, checks balances, and performs transfers between users.
-
-7. **Thread Handling:** Like the client, the server manages multiple threads for handling multiple client connections simultaneously.
-
-8. **Logging:** Both the client and server components have logging functionality to record various events and interactions for debugging and auditing.
-
-These components work together to provide a secure Person2Person (P2P) micropayment system. The client initiates and requests micropayments, while the server manages user registration, online user lists, and the actual micropayment transactions. The socket communication enables real-time interaction between clients and the server.
+These three sections together create a secure Person2Person (P2P) micropayment system. The Socket Client and Socket Server components work in tandem to enable users to interact and perform micropayments securely, while the Shared component ensures code reusability and common utility functions across the project, including logging and thread handling.
 
 ## Project Structure 🏗️
 
