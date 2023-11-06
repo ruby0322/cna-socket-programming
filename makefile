@@ -1,13 +1,13 @@
 all: client server thanks
 
 client:
-	clang++ ./client/*.cpp ./shared/*.cpp -o ./client/client -std=c++17
+	clang++ ./client/*.cpp ./shared/*.cpp -o ./run_client -std=c++17
 
 server:
-	clang++ ./server/*.cpp ./shared/*.cpp -o ./server/server -std=c++17
+	clang++ ./server/*.cpp ./shared/*.cpp -o ./run_server -std=c++17
 
 clean:
-	rm -rf ./client/client && rm -rf ./server/server
+	rm ./run_server && rm ./run_client
 
 thanks:
 	echo "Make Done!"

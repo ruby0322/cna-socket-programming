@@ -1,5 +1,7 @@
 # 💰 A Secure P2P Micropayment System
 
+Note: This project can be found on [GitHub](https://github.com/ruby0322/cna-socket-programming).
+
 ## Table of Contents
 
 - [💰 A Secure P2P Micropayment System](#-a-secure-p2p-micropayment-system)
@@ -111,13 +113,13 @@ This will build the client and server executables.
 4. To run the client, use the following command:
 
 ```shell
-./client/client
+./run_client
 ```
 
 5. To run the server, use the following command:
 
 ```shell
-./server/server
+./run_server
 ```
 
 ## Usage 🧑‍💻
