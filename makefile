@@ -7,7 +7,7 @@ server:
 	clang++ ./server/*.cpp *.cpp -o ./server/server -std=c++17
 
 clean:
-	cd client && rm -rf ./client && cd ../server && rm -rf ./server
+	rm -rf ./client/client && rm -rf ./server/server
 
 .PHONY: all client server clean
 .DEFAULT_GOAL: all
