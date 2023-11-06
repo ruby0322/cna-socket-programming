@@ -1,12 +1,32 @@
 # 💰 A Secure P2P Micropayment System
 
+## Table of Contents
+
+- [💰 A Secure P2P Micropayment System](#-a-secure-p2p-micropayment-system)
+  - [Table of Contents](#table-of-contents)
+  - [Project Overview 🚀](#project-overview-)
+  - [Project Features ⭐](#project-features-)
+    - [Socket Client](#socket-client)
+    - [Socket Server](#socket-server)
+    - [Shared](#shared)
+  - [Project Structure 🏗️](#project-structure-️)
+  - [Building and Running ▶️](#building-and-running-️)
+  - [Usage 🧑‍💻](#usage-)
+  - [Documentation](#documentation)
+    - [Login \& Initiate P2P Listening](#login--initiate-p2p-listening)
+    - [Register](#register)
+    - [List Online Users](#list-online-users)
+    - [Make a Micropayment](#make-a-micropayment)
+    - [Exit and Disconnect](#exit-and-disconnect)
+
+
 ## Project Overview 🚀
 
 This project is a secure Person-to-Person (P2P) micropayment system implemented in C++. It consists of both client and server components to facilitate secure micropayments between users. The system handles network communication using sockets and provides a command-line interface for user interaction.
 
 ## Project Features ⭐
 
-### Socket Client:
+### Socket Client
 
 - **Responsibility:** The Socket Client component is responsible for connecting to the server and facilitating communication between the client and the server.
 
@@ -16,7 +36,7 @@ This project is a secure Person-to-Person (P2P) micropayment system implemented 
   3. **P2P Listening:** Enables the client to listen on a specific port for incoming P2P connections.
   4. **Message Transfer:** Communicates with the server by sending user commands and micropayment requests.
 
-### Socket Server:
+### Socket Server
 
 - **Responsibility:** The Socket Server component serves as the central hub for handling client connections and micropayment transactions.
 
@@ -27,7 +47,7 @@ This project is a secure Person-to-Person (P2P) micropayment system implemented 
   4. **Online User List:** Maintains and provides an online user list, which clients can request.
   5. **Micropayments:** Processes micropayment requests, verifies balances, and performs secure transfers between users.
 
-### Shared:
+### Shared
 
 - **Purpose:** The Shared component contains shared code and utility classes used by both the Socket Client and Socket Server.
 
@@ -116,29 +136,28 @@ The client provides a command-line interface for interaction. You can use variou
 
 ## Documentation
 
-### Valid Requests & Responses
 
-#### 1. Login & Initiate P2P Listening
+### Login & Initiate P2P Listening
 
 - **CLI Option**: `a`
 - **Raw Message**: `REGISTER#<username>`
 - **Success Response**: `100 OK`
 - **Failure Response**: `210 FAIL
 
-#### 2. Register
+### Register
 
 - **CLI Option**: `b`
 - **Raw Message**: `REGISTER#<username>`
 - **Success Response**:  List of online users and their details.
 - **Failure Response**: `220 AUTH_FAIL
 
-#### 3. List Online Users
+### List Online Users
 
 - **CLI Option**: `c`
 - **Raw Message**: `List`
 - **Response**: List of online users and their details.
 
-#### 4. Make a Micropayment
+### Make a Micropayment
 
 - **CLI Option**: `c`
 - **Raw Message**: `<fromUser>#<amount>#<toUser>`
@@ -149,7 +168,7 @@ The client provides a command-line interface for interaction. You can use variou
   - `Transfer failed due to no permission.`
   - `Transfer failed due to invalid user.`
 
-#### 4. Exit and Disconnect
+### Exit and Disconnect
 
 - **CLI Option**: `d`
 - **Raw Message**: `Exit`
