@@ -116,8 +116,6 @@ The client provides a command-line interface for interaction. You can use variou
 
 ## Documentation
 
-Certainly! Here's the organized version of the documentation for client users:
-
 ### Valid Requests & Responses
 
 #### 1. Login & Initiate P2P Listening
