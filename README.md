@@ -114,4 +114,48 @@ The client provides a command-line interface for interaction. You can use variou
 
 - 🚪 To exit the client, enter: `a` 
 
+## Documentation
+
+Certainly! Here's the organized version of the documentation for client users:
+
+### Valid Requests & Responses
+
+#### 1. Login & Initiate P2P Listening
+
+- **CLI Option**: `a`
+- **Raw Message**: `REGISTER#<username>`
+- **Success Response**: `100 OK`
+- **Failure Response**: `210 FAIL
+
+#### 2. Register
+
+- **CLI Option**: `b`
+- **Raw Message**: `REGISTER#<username>`
+- **Success Response**:  List of online users and their details.
+- **Failure Response**: `220 AUTH_FAIL
+
+#### 3. List Online Users
+
+- **CLI Option**: `c`
+- **Raw Message**: `List`
+- **Response**: List of online users and their details.
+
+#### 4. Make a Micropayment
+
+- **CLI Option**: `c`
+- **Raw Message**: `<fromUser>#<amount>#<toUser>`
+- **Success Response**: `100 OK`
+- **Failure Response**:
+  - `Transfer failed due to insufficient balance.`
+  - `Transfer failed due to negative amount.`
+  - `Transfer failed due to no permission.`
+  - `Transfer failed due to invalid user.`
+
+#### 4. Exit and Disconnect
+
+- **CLI Option**: `d`
+- **Raw Message**: `Exit`
+- **Response**: `Bye`
+
+
 Please refer to the source code for a more detailed understanding of the functionality.
