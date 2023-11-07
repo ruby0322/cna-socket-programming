@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <map>
+
 #ifndef ADDRESS_HPP
   #include "../shared/Address.hpp"
 #endif
@@ -28,8 +29,8 @@ private:
   static sockaddr_in peerAddress;
   static const int MAX_CLIENTS = 100;
   static const int BUFFER_SIZE = 1024;
-  static const std::string SERVER_ADDR;
-  static const int SERVER_PORT;
+  static std::string serverIp;
+  static int serverPort;
 
   static bool up;
   static int listeningPeerSocketFd;
@@ -49,5 +50,6 @@ public:
   static void connectToPeer(Address addr);
   static void* onPeerConnect(void* arg);
   static bool onCommand(std::string cmd);
+  static void setServer(std::string ip, int port);
   static std::string commandLineInterface();
 };

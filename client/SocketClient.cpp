@@ -3,8 +3,8 @@
 #endif
 
 bool SocketClient::up = true;
-const std::string SocketClient::SERVER_ADDR = "127.0.0.1";
-const int SocketClient::SERVER_PORT = 8000;
+std::string SocketClient::serverIp = "127.0.0.1";
+int SocketClient::serverPort = 8000;
 sockaddr_in SocketClient::serverAddress;
 sockaddr_in SocketClient::peerAddress;
 int SocketClient::serverSocketFd;
@@ -30,17 +30,23 @@ SocketClient::SocketClient(std::string prefix) {
       throw std::runtime_error("Socket Creation Error");
     }
 
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(SERVER_PORT); 
-    serverAddress.sin_addr.s_addr = inet_addr(SERVER_ADDR.c_str());
+    
 
     peerAddress.sin_family = AF_INET;
     
-  }
+}
   
 SocketClient::~SocketClient() {
     close(serverSocketFd);
     close(listeningPeerSocketFd);
+}
+
+void SocketClient::setServer(std::string ip, int port) {
+  serverIp = ip;
+  serverPort = port;
+  serverAddress.sin_family = AF_INET;
+  serverAddress.sin_port = htons(serverPort); 
+  serverAddress.sin_addr.s_addr = inet_addr(serverIp.c_str());
 }
 
 void* SocketClient::listen(void* arg) {
@@ -97,12 +103,12 @@ void SocketClient::updatePeerPorts(std::string list) {
 }
 
 void* SocketClient::onServerConnect(void* arg) {
-    logger.info("Client connected to server: " + SERVER_ADDR + ':' + std::to_string(SERVER_PORT));
+    logger.info("Client connected to server: " + serverIp + ':' + std::to_string(serverPort));
     while (up) {
       char buffer[BUFFER_SIZE] = { 0 };
       recv(serverSocketFd, buffer, BUFFER_SIZE, 0);
       std::string message(buffer);
-      logger.message(SERVER_ADDR + ':' + std::to_string(SERVER_PORT), message);
+      logger.message(serverIp + ':' + std::to_string(serverPort), message);
       if (std::count(message.begin(), message.end(), '#') > 0) {
         updatePeerPorts(message);
       }
@@ -151,8 +157,8 @@ bool SocketClient::onCommand(std::string cmd) {
         int port = std::stoi(cmd.substr(cmd.find('#')+1));
         listening = true;
 
-        logger.info("Client listening on " + SERVER_ADDR + ':' + std::to_string(port));
-        threadAddressArg.ip = SERVER_ADDR;
+        logger.info("Client listening on " + serverIp + ':' + std::to_string(port));
+        threadAddressArg.ip = serverIp;
         threadAddressArg.port = port;
 
         pthread_t listenThread;

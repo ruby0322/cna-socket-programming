@@ -33,7 +33,7 @@ private:
 
   static const int MAX_CLIENTS = 100;
   static const int BUFFER_SIZE = 1024;
-  static const int PORT = 8000;
+  static int port;
   
   char mode;
   int socketFd;
@@ -47,6 +47,7 @@ public:
   ~SocketServer();
   void setup();
   void listen();
+  static void setPort(int port);
   static bool isClientRegistered(std::string addr);
   static bool isUsernameTaken(std::string username);
   static std::string handleRequest(int clientSocket, std::string request);

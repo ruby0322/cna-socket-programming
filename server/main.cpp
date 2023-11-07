@@ -6,11 +6,16 @@
 
 int main(int argc, char* argv[]) {
   char mode = 'd';
-  if (argc > 1) {
-    mode = argv[1][1];
-  }
   SocketServer bankServer(mode, "BankServer");
+  if (argc < 2) {
+    std::cout << "Usage: ./<filename> <server-port> [-options]" << std::endl;
+    return -1;
+  } else {
+    if (argc == 3) {
+      mode = argv[2][1];
+    }
+    bankServer.setPort(std::stoi(std::string(argv[1])));
+  }
   bankServer.listen();
-
   return 0;
 }

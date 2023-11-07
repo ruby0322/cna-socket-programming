@@ -11,6 +11,7 @@
 #include <iostream>
 
 int SocketServer::numClient = 0;
+int SocketServer::port = 8000;
 ServerLogger SocketServer::logger;
 std::map<std::string, User> SocketServer::registeredUsers;
 std::map<std::string, std::pair<std::string, int>> SocketServer::connectedUsers;
@@ -24,12 +25,15 @@ bool SocketServer::isUsernameTaken(std::string username) {
 }
 
 SocketServer::SocketServer(char mode, std::string prefix) {
-    setup();
     logger.setMode(mode, prefix);
 }
 
 SocketServer::~SocketServer() {
     ;
+}
+
+void SocketServer::setPort(int port) {
+    SocketServer::port = port;
 }
 
 std::string SocketServer::getOnlineList(std::string addr) {
@@ -59,7 +63,7 @@ std::string SocketServer::getOnlineList(std::string addr) {
 
 void SocketServer::setup() {
     serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(SocketServer::PORT); 
+    serverAddress.sin_port = htons(SocketServer::port); 
     // serverAddress.sin_addr.s_addr = INADDR_ANY;
     serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
     socketFd = socket(AF_INET, SOCK_STREAM, 0);
@@ -87,10 +91,11 @@ void* SocketServer::handleClient(void* arg) {
 }
 
 void SocketServer::listen() {
+    setup();
     int newSocket;
     sockaddr_in clientAddress;
     ::listen(socketFd, MAX_CLIENTS);
-    logger.serverUp(SocketServer::PORT);
+    logger.serverUp(SocketServer::port);
     while (true) {
         int clientSize = sizeof(clientAddress);
         newSocket = accept(socketFd, (sockaddr*)&clientAddress, (socklen_t*)&clientSize);
