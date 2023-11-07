@@ -113,13 +113,13 @@ This will build the client and server executables.
 4. To run the client, use the following command:
 
 ```shell
-./run_client
+./run_client <server-ip> <server-port>
 ```
 
 5. To run the server, use the following command:
 
 ```shell
-./run_server
+./run_server <server-port> [-options]
 ```
 
 ## Usage 🧑‍💻
