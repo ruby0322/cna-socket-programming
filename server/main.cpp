@@ -4,7 +4,16 @@
 #include <string.h>
 #include "SocketServer.hpp"
 
+#include <openssl/ssl.h>
+#include <openssl/crypto.h>
+#include <openssl/err.h>
+
 int main(int argc, char* argv[]) {
+  OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CONFIG, nullptr);
+  SSL_library_init();
+  SSL_load_error_strings();
+  ERR_load_BIO_strings();
+  OpenSSL_add_all_algorithms();
   char mode = 'd';
   SocketServer bankServer(mode, "BankServer");
   if (argc < 2) {

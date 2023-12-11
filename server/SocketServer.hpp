@@ -1,5 +1,9 @@
 #define SOCKET_SERVER_HPP
 
+#include <openssl/rsa.h>
+#include <openssl/pem.h>
+#include <openssl/bio.h>
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -8,8 +12,17 @@
 #include <pthread.h>
 #include <map>
 #include <set>
+#include <openssl/ssl.h>
+#include <openssl/crypto.h>
+#include <openssl/err.h>
 #include "../shared/Logger.hpp"
 #include "User.hpp"
+
+struct ClientInfo {
+    std::string ip;
+    int port;
+    std::string publicKey;
+};
 
 namespace Code {
   const std::string BAD_REQUEST = "200 BAD_REQUEST\n";
@@ -32,7 +45,6 @@ class SocketServer {
 private:
 
   static const int MAX_CLIENTS = 100;
-  static const int BUFFER_SIZE = 1024;
   static int port;
   
   char mode;
@@ -40,8 +52,11 @@ private:
   sockaddr_in serverAddress;
   static ServerLogger logger;
   static int numClient;
-  static std::map<std::string, std::pair<std::string, int>> connectedUsers;
+  static std::map<std::string, ClientInfo> connectedUsers;
   static std::map<std::string, User> registeredUsers;
+
+  static std::string publicKey;
+  static std::string privateKey;
 public:
   SocketServer(char mode, std::string prefix);
   ~SocketServer();

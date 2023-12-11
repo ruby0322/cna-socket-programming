@@ -18,6 +18,11 @@ bool SocketClient::peerLock = false;
 bool SocketClient::messageLock = false;
 bool SocketClient::isConnectedToPeer = false;
 
+std::string SocketClient::serverPublicKey;
+std::string SocketClient::publicKey;
+std::string SocketClient::privateKey;
+std::string SocketClient::peerPublicKey;
+
 SocketClient::SocketClient(std::string prefix) {
     logger.setMode('a', prefix);
     if ((serverSocketFd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -30,10 +35,16 @@ SocketClient::SocketClient(std::string prefix) {
       throw std::runtime_error("Socket Creation Error");
     }
 
-    
-
     peerAddress.sin_family = AF_INET;
     
+    // Generate RSA key pair for the client
+    RSA* rsa = RSA_generate_key(BUFFER_SIZE, RSA_F4, nullptr, nullptr);
+    if (!rsa) {
+        throw std::runtime_error("Error generating RSA key pair.");
+    }
+    publicKey = getRSAPublicKeyString(rsa);
+    privateKey = getRSAPrivateKeyString(rsa);
+    RSA_free(rsa);
 }
   
 SocketClient::~SocketClient() {
@@ -104,10 +115,19 @@ void SocketClient::updatePeerPorts(std::string list) {
 
 void* SocketClient::onServerConnect(void* arg) {
     logger.info("Client connected to server: " + serverIp + ':' + std::to_string(serverPort));
+
+    send(serverSocketFd, publicKey.c_str(), publicKey.length(), 0);
+
+    char buffer[BUFFER_SIZE] = { 0 };
+    ssize_t bytesRead = recv(serverSocketFd, buffer, BUFFER_SIZE, 0);
+    serverPublicKey = std::string(buffer, buffer+bytesRead);
+
     while (up) {
       char buffer[BUFFER_SIZE] = { 0 };
-      recv(serverSocketFd, buffer, BUFFER_SIZE, 0);
-      std::string message(buffer);
+      bytesRead = recv(serverSocketFd, buffer, BUFFER_SIZE, 0);
+      std::string rawMessage = std::string(buffer, buffer+bytesRead);
+      logger.rawMessage(rawMessage);
+      std::string message = decryptMessage(rawMessage, privateKey);
       logger.message(serverIp + ':' + std::to_string(serverPort), message);
       if (std::count(message.begin(), message.end(), '#') > 0) {
         updatePeerPorts(message);
@@ -117,7 +137,7 @@ void* SocketClient::onServerConnect(void* arg) {
     return nullptr;
 }
 
-void SocketClient::connectToPeer(Address addr) {
+void SocketClient::sendMessageToPeer(Address addr, const std::string& message) {
     sockaddr_in peerAddr;
     peerAddr.sin_family = AF_INET;
     peerAddr.sin_port = htons(addr.port);
@@ -126,26 +146,58 @@ void SocketClient::connectToPeer(Address addr) {
       std::cout << "failed to connect to peer " << addr.toString() << std::endl;
       throw std::runtime_error("Connection Error");
     }
-    logger.info("Connected to peer " + addr.toString());
+
+    send(connectingPeerSocketFd, publicKey.c_str(), publicKey.length(), 0);
+
+    char buffer[BUFFER_SIZE] = { 0 };
+    ssize_t bytesRead = recv(connectingPeerSocketFd, buffer, BUFFER_SIZE, 0);
+    peerPublicKey = std::string(buffer, buffer+bytesRead);
+    __debug(peerPublicKey);
+
+    sendEncryptedMessage(connectingPeerSocketFd, message, peerPublicKey);
+
     isConnectedToPeer = true;
+    logger.info("Connected to peer " + addr.toString());
+
+    close(connectingPeerSocketFd);
+    if ((connectingPeerSocketFd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+      throw std::runtime_error("Socket Creation Error");
+    }
 }
 
 void* SocketClient::onPeerConnect(void* arg) {
-    int peerSocket = *((int*)arg);
-    Address addr = getAddr(peerSocket);
-    logger.info("New connection from peer " + addr.toString());
-    while (up) {
-      char buffer[BUFFER_SIZE] = {0};
-      if (recv(peerSocket, buffer, BUFFER_SIZE, 0) == 0) {
-        logger.peerDisconnection(addr.toString());
-        close(peerSocket);
+    connectingPeerSocketFd = *((int*)arg);
+    Address addr = getAddr(connectingPeerSocketFd);
+    if (addr.ip == "0.0.0.0") {
+        close(connectingPeerSocketFd);
         return nullptr;
-      }
-      std::string msg(buffer);
-      logger.message(addr.toString(), msg);
-      logger.info("Forwarding peer message to server...");
-      send(serverSocketFd, msg.c_str(), msg.size(), 0);
     }
+    logger.info("New connection from peer " + addr.toString());
+
+    // exchange public keys
+    
+    send(connectingPeerSocketFd, publicKey.c_str(), publicKey.length(), 0);
+
+    char buffer[BUFFER_SIZE] = { 0 };
+    ssize_t bytesRead = recv(connectingPeerSocketFd, buffer, BUFFER_SIZE, 0);
+    peerPublicKey = std::string(buffer, buffer+bytesRead);
+    __debug(peerPublicKey);
+    isConnectedToPeer = true;
+
+    // while (up) {
+    std::fill(buffer, buffer+BUFFER_SIZE, 0);
+    bytesRead = recv(connectingPeerSocketFd, buffer, BUFFER_SIZE, 0);
+    std::string raw(buffer, buffer+bytesRead);
+    logger.rawMessage(raw);
+
+    std::string msg = decryptMessage(raw, privateKey);
+    logger.message(addr.toString(), msg);
+    
+    logger.info("Forwarding encryted peer message to server...");
+    sendEncryptedMessage(serverSocketFd, msg, serverPublicKey);
+    logger.peerDisconnection(addr.toString());
+    close(connectingPeerSocketFd);
+    // }
     return nullptr;
 }
 
@@ -165,21 +217,15 @@ bool SocketClient::onCommand(std::string cmd) {
         pthread_create(&listenThread, nullptr, listen, (void*)&threadAddressArg);
       }
     } else if (std::count(cmd.begin(), cmd.end(), '#') == 2) {
-      send(serverSocketFd, "List", 4, 0);
+      sendEncryptedMessage(serverSocketFd, "List", serverPublicKey);
       peerLock = true;
       while (peerLock);
       auto [_, __, peerUsername] = parseTransferRequest(cmd);
-      if (isConnectedToPeer) {
-        close(connectingPeerSocketFd);
-        if ((connectingPeerSocketFd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-          throw std::runtime_error("Socket Creation Error");
-        }
-      }
-      connectToPeer(peerAddresses[peerUsername]);
-      send(connectingPeerSocketFd, cmd.c_str(), cmd.size(), 0);
+      __debug(cmd);
+      sendMessageToPeer(peerAddresses[peerUsername], cmd);
       return false;
     }
-    send(serverSocketFd, cmd.c_str(), cmd.size(), 0);
+    sendEncryptedMessage(serverSocketFd, cmd, serverPublicKey);
     return true;
 }
 
@@ -252,3 +298,4 @@ std::string SocketClient::commandLineInterface() {
     logger.cliInvalidInput("Invalid option");
     return "";
 }
+

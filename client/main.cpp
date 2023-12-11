@@ -2,15 +2,24 @@
   #include "SocketClient.hpp"
 #endif
 
-int main(int argc, char const *argv[]) {
+#include <openssl/ssl.h>
+#include <openssl/crypto.h>
+#include <openssl/err.h>
 
-  SocketClient client("BankClient");
+int main(int argc, char const *argv[]) {
+  OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CONFIG, nullptr);
+  SSL_library_init();
+  SSL_load_error_strings();
+  ERR_load_BIO_strings();
+  OpenSSL_add_all_algorithms();
+
+  SocketClient bankClient("BankClient");
   if (argc < 3) {
     std::cout << "Usage: ./<filename> <server-ip> <server-port> [-options]" << std::endl;
     return -1;
   } else {
-    client.setServer(std::string(argv[1]), std::stoi(std::string(argv[2])));
+    bankClient.setServer(std::string(argv[1]), std::stoi(std::string(argv[2])));
   }
-  client.run();
+  bankClient.run();
   return 0;
 }

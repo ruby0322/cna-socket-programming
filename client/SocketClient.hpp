@@ -8,6 +8,10 @@
 #include <string.h>
 #include <map>
 
+#include <openssl/rsa.h>
+#include <openssl/pem.h>
+#include <openssl/bio.h>
+
 #ifndef ADDRESS_HPP
   #include "../shared/Address.hpp"
 #endif
@@ -28,7 +32,6 @@ private:
   static sockaddr_in serverAddress;
   static sockaddr_in peerAddress;
   static const int MAX_CLIENTS = 100;
-  static const int BUFFER_SIZE = 1024;
   static std::string serverIp;
   static int serverPort;
 
@@ -39,6 +42,11 @@ private:
   static std::map<std::string, Address> peerAddresses;  // username -> Address
 
   static ClientLogger logger;
+  static std::string serverPublicKey;
+  static std::string publicKey;
+  static std::string privateKey;
+  static std::string peerPublicKey;
+
 public:
   SocketClient(std::string prefix);
   ~SocketClient();
@@ -47,9 +55,10 @@ public:
   static void* handleCommand(void* arg);
   static void updatePeerPorts(std::string list);
   static void* onServerConnect(void* arg);
-  static void connectToPeer(Address addr);
+  static void sendMessageToPeer(Address addr, const std::string& message);
   static void* onPeerConnect(void* arg);
   static bool onCommand(std::string cmd);
   static void setServer(std::string ip, int port);
   static std::string commandLineInterface();
+  static void generateRSAKeyPair();  
 };

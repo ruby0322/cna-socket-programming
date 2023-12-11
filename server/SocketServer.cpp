@@ -14,10 +14,12 @@ int SocketServer::numClient = 0;
 int SocketServer::port = 8000;
 ServerLogger SocketServer::logger;
 std::map<std::string, User> SocketServer::registeredUsers;
-std::map<std::string, std::pair<std::string, int>> SocketServer::connectedUsers;
+std::map<std::string, ClientInfo> SocketServer::connectedUsers;
+std::string SocketServer::publicKey;
+std::string SocketServer::privateKey;
 
 bool SocketServer::isClientRegistered(std::string addr) {
-    return connectedUsers[addr].first.size() > 0;
+    return connectedUsers[addr].ip.size() > 0;
 }
 
 bool SocketServer::isUsernameTaken(std::string username) {
@@ -26,11 +28,18 @@ bool SocketServer::isUsernameTaken(std::string username) {
 
 SocketServer::SocketServer(char mode, std::string prefix) {
     logger.setMode(mode, prefix);
+
+    // Generate RSA key pair for the server
+    RSA* rsa = RSA_generate_key(BUFFER_SIZE, RSA_F4, nullptr, nullptr);
+    if (!rsa) {
+        throw std::runtime_error("Error generating RSA key pair.");
+    }
+    publicKey = getRSAPublicKeyString(rsa);
+    privateKey = getRSAPrivateKeyString(rsa);
+    RSA_free(rsa);
 }
 
-SocketServer::~SocketServer() {
-    ;
-}
+SocketServer::~SocketServer() {}
 
 void SocketServer::setPort(int port) {
     SocketServer::port = port;
@@ -38,9 +47,9 @@ void SocketServer::setPort(int port) {
 
 std::string SocketServer::getOnlineList(std::string addr) {
     std::string list, username;
-    if (connectedUsers[addr].first.size() > 0) {
-        logger.userListRequest(connectedUsers[addr].first);
-        list += std::to_string(registeredUsers[connectedUsers[addr].first].getBalance());
+    if (connectedUsers[addr].ip.size() > 0) {
+        logger.userListRequest(connectedUsers[addr].ip);
+        list += std::to_string(registeredUsers[connectedUsers[addr].ip].getBalance());
         list += '\n';
     } else {
         logger.unauthedUserRequest(addr);
@@ -51,11 +60,11 @@ std::string SocketServer::getOnlineList(std::string addr) {
     list += std::to_string(connectedUsers.size());
     list += '\n';
     for (auto& [addr, p] : connectedUsers) {
-        list += p.first;
+        list += p.ip;
         list += '#';
         list += addr.substr(0, addr.find(':'));
         list += '#';
-        list += std::to_string(p.second);
+        list += std::to_string(p.port);
         list += '\n';
     }
     return list;
@@ -83,6 +92,18 @@ void* SocketServer::handleClient(void* arg) {
     std::string addr = getAddr(clientSocket).toString();
     newConnection(addr);
     connectedUsers[addr];
+
+    char buffer[BUFFER_SIZE] = {0};
+    ssize_t bytesRead = recv(clientSocket, buffer, BUFFER_SIZE, 0);
+
+    if (bytesRead <= 0) {
+        return nullptr;
+    }
+
+    send(clientSocket, publicKey.c_str(), strlen(publicKey.c_str()), 0);
+
+    connectedUsers[addr].publicKey = std::string(buffer, buffer+bytesRead);
+
     SocketServer::clientHandler(clientSocket);
     close(clientSocket);
     lostConnection(addr);   
@@ -114,7 +135,6 @@ std::string SocketServer::registerUser(std::string username, std::string addr) {
         logger.userRegisterFailure(addr);
         return Code::Auth::REGISTER_FAIL_INVALID_CHAR;
     } else {
-        // connectedUsers[addr] = username;
         registeredUsers[username] = {username};
         logger.userRegisterSuccess(addr, username);
         return Code::OK;
@@ -124,8 +144,8 @@ std::string SocketServer::registerUser(std::string username, std::string addr) {
 std::string SocketServer::loginUser(std::string addr, std::string username, int port) {
     if (isUsernameTaken(username)) {
         logger.userLoginSuccess(addr, username, port);
-        connectedUsers[addr].first = username;
-        connectedUsers[addr].second = port;
+        connectedUsers[addr].ip = username;
+        connectedUsers[addr].port = port;
     } else {
         logger.userLoginFailure(addr, username);
     }
@@ -141,9 +161,9 @@ std::string SocketServer::handleTransferRequest(std::string addr, std::string re
         std::string fromUser = req.substr(0, firstOccurence);
         std::string toUser = req.substr(secondOccurence+1);
 
-        if (toUser != connectedUsers[addr].first) {
+        if (toUser != connectedUsers[addr].ip) {
             res = Code::Transfer::FAIL_NO_PERMISSION;
-            logger.transferFailureNoPermission(connectedUsers[addr].first, fromUser, toUser, amount);
+            logger.transferFailureNoPermission(connectedUsers[addr].ip, fromUser, toUser, amount);
         } else if (!isUsernameTaken(toUser) || !isUsernameTaken(fromUser)) {
             res = Code::Transfer::FAIL_INVALID_USER;
             logger.transferFailureInvalidPayee(fromUser, toUser, amount);
@@ -163,7 +183,7 @@ std::string SocketServer::handleTransferRequest(std::string addr, std::string re
 std::string SocketServer::handleRequest(int clientSocket, std::string req) {
     std::string addr = getAddr(clientSocket).toString();
     if (isClientRegistered(addr)) {
-        logger.userMessage(addr, connectedUsers[addr].first, req);
+        logger.userMessage(addr, connectedUsers[addr].ip, req);
     } else {
         logger.userMessage(addr, "", req);
     }
@@ -172,7 +192,7 @@ std::string SocketServer::handleRequest(int clientSocket, std::string req) {
     try {
         if (req == "Exit") {
             res = "Bye\n";
-            logger.userDisconnect(addr, connectedUsers[addr].first);
+            logger.userDisconnect(addr, connectedUsers[addr].ip);
         } else if (req == "List") {
             res = getOnlineList(addr);
         } else if (req.size() >= 9 && req.substr(0, 9) == "REGISTER#") {
@@ -190,19 +210,23 @@ std::string SocketServer::handleRequest(int clientSocket, std::string req) {
         logger.error(e);
         res = Code::ERROR;
     }
+
     return res;
 }
 
 void SocketServer::clientHandler(int clientSocket) {
   while (true) {
-    char buffer[1024] = {0};
-    if (recv(clientSocket, buffer, 1024, 0) == 0) {
+    char buffer[BUFFER_SIZE] = {0};
+    ssize_t bytesRead = recv(clientSocket, buffer, BUFFER_SIZE, 0);
+    if (bytesRead <= 0) {
         break;
     }
-    std::string req(buffer), res;
-    res = handleRequest(clientSocket, req);
-    int cstrlen = strlen(res.c_str());
-    send(clientSocket, res.c_str(), cstrlen, 0);
+    std::string rawMessage(buffer, buffer+bytesRead);
+    logger.rawMessage(rawMessage);
+    std::string req = decryptMessage(rawMessage, privateKey);
+    std::string res = handleRequest(clientSocket, req);
+
+    sendEncryptedMessage(clientSocket, res, connectedUsers[getAddr(clientSocket).toString()].publicKey);
     if (req == "Exit") break;
   }
 }

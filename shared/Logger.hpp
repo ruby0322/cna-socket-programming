@@ -12,46 +12,46 @@ protected:
     Logger();
     ~Logger();
 public:
-    void setMode(char mode, std::string prefix);
+    void setMode(char mode, const std::string& prefix);
+    void rawMessage(const std::string& message) const;
+    void message(const std::string& addr, const std::string& message) const;
 };
 
 class ClientLogger : public Logger {
 public:
     ClientLogger();
     ~ClientLogger();
-    void clientUp(std::string addr) const;
-    void info(std::string text) const;
-    void message(std::string addr, std::string message) const;
-    void peerConnection(std::string addr) const;
-    void peerDisconnection(std::string addr) const;
+    void clientUp(const std::string& addr) const;
+    void info(const std::string& text) const;
+    void peerConnection(const std::string& addr) const;
+    void peerDisconnection(const std::string& addr) const;
     void cliOptions() const;
-    void cliInvalidInput(std::string reason) const;
-    void cliPrompt(std::string promt) const;
+    void cliInvalidInput(const std::string& reason) const;
+    void cliPrompt(const std::string& promt) const;
 };
 
 class ServerLogger : public Logger {
 public:
     ServerLogger();
     ~ServerLogger();
-    void debug(std::string text) const;
+    void debug(const std::string& text) const;
     void serverUp(int port) const;
     void serverDown() const;
     void error(std::exception &exception) const;
-    void newConnection(int numClient, std::string addr) const;
-    void lostConnection(int numClient, std::string addr) const;
-    void userRegisterAttempt(std::string addr) const;
-    void userRegisterSuccess(std::string addr, std::string username) const;
-    void userRegisterFailure(std::string addr) const;
-    void userDisconnect(std::string addr, std::string username) const;
-    void userListRequest(std::string username) const;
-    void unauthedUserRequest(std::string addr) const;
-    void userMessage(std::string addr, std::string username, std::string message) const;
-    void transferSuccess(std::string fromUser, std::string toUser, int amount) const;
-    void transferFailureInsufficientBalance(std::string fromUser, std::string toUser, int amount) const;
-    void transferFailureNegativeAmount(std::string fromUser, std::string toUser, int amount) const;
-    void transferFailureNoPermission(std::string fromUser, std::string attemptedFromUser, std::string toUser, int amount) const;
-    void transferFailureInvalidPayee(std::string fromUser, std::string toUser, int amount) const;
-    void userLoginFailure(std::string addr, std::string username) const;
-    void userLoginSuccess(std::string addr, std::string username, int port) const;
-
+    void newConnection(int numClient, const std::string& addr) const;
+    void lostConnection(int numClient, const std::string& addr) const;
+    void userRegisterAttempt(const std::string& addr) const;
+    void userRegisterSuccess(const std::string& addr, const std::string& username) const;
+    void userRegisterFailure(const std::string& addr) const;
+    void userDisconnect(const std::string& addr, const std::string& username) const;
+    void userListRequest(const std::string& username) const;
+    void unauthedUserRequest(const std::string& addr) const;
+    void userMessage(const std::string& addr, const std::string& username, const std::string& message) const;
+    void transferSuccess(const std::string& fromUser, const std::string& toUser, int amount) const;
+    void transferFailureInsufficientBalance(const std::string& fromUser, const std::string& toUser, int amount) const;
+    void transferFailureNegativeAmount(const std::string& fromUser, const std::string& toUser, int amount) const;
+    void transferFailureNoPermission(const std::string& fromUser, const std::string& attemptedFromUser, const std::string& toUser, int amount) const;
+    void transferFailureInvalidPayee(const std::string& fromUser, const std::string& toUser, int amount) const;
+    void userLoginFailure(const std::string& addr, const std::string& username) const;
+    void userLoginSuccess(const std::string& addr, const std::string& username, int port) const;
 };
