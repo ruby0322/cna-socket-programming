@@ -11,6 +11,11 @@ Note: This project can be found on [GitHub](https://github.com/ruby0322/cna-sock
     - [Socket Client](#socket-client)
     - [Socket Server](#socket-server)
     - [Shared](#shared)
+  - [Security Features 🔐](#security-features-)
+    - [Asymmetric Encryption Explained](#asymmetric-encryption-explained)
+    - [RSA Key Generation and Management](#rsa-key-generation-and-management)
+    - [Public Key Exchange](#public-key-exchange)
+    - [Encryption and Decryption Process](#encryption-and-decryption-process)
   - [Project Structure 🏗️](#project-structure-️)
   - [Building and Running ▶️](#building-and-running-️)
   - [Usage 🧑‍💻](#usage-)
@@ -59,6 +64,45 @@ This project is a secure Person-to-Person (P2P) micropayment system implemented 
   3. **Utils:** Contains utility functions used across the project, aiding in parsing, validation, and other common tasks.
 
 These three sections together create a secure Person2Person (P2P) micropayment system. The Socket Client and Socket Server components work in tandem to enable users to interact and perform micropayments securely, while the Shared component ensures code reusability and common utility functions across the project, including logging and thread handling.
+
+## Security Features 🔐
+
+This project utilizes **OpenSSL** for **asymmetric RSA encryption/decryption** to ensure data security.
+
+### Asymmetric Encryption Explained
+
+- **Asymmetric Encryption Basics:**
+  - Asymmetric encryption, also known as public-key cryptography, involves a pair of keys: a public key and a private key.
+  - The public key is openly shared and used for encrypting messages, while the private key is kept secret and used for decrypting messages.
+  - This method allows secure communication over an insecure channel without the need to share a secret key beforehand.
+
+- **RSA Algorithm:**
+  - RSA, named after Rivest-Shamir-Adleman, the inventors of the algorithm, is a widely used form of asymmetric encryption.
+  - It is based on the mathematical principle that it is easy to multiply large prime numbers but difficult to factor their product.
+
+### RSA Key Generation and Management
+- **API Used:** `RSA_generate_key(BUFFER_SIZE, RSA_F4, nullptr, nullptr);`
+  - The RSA key pair is generated with a specified buffer size and RSA_F4 as the public exponent, ensuring the generation of a unique and secure key pair.
+
+- **Public and Private Key Management:**
+  - Stored as strings (`std::string SocketClient::publicKey;`, `std::string SocketClient::privateKey;`), the keys are extracted from the RSA structure and converted into strings for transmission and storage.
+
+### Public Key Exchange
+- **Client-Server and P2P Exchange:**
+  - The client and server, and peers in P2P, exchange their public keys to establish a secure channel for communication.
+
+### Encryption and Decryption Process
+- **Encryption Using Public Key:**
+  - Messages are encrypted using the recipient's public key, ensuring that only the intended recipient can decrypt the message.
+  - **Example API:** `RSA_public_encrypt(...)`
+
+- **Decryption Using Private Key:**
+  - The recipient uses their private key to decrypt messages.
+  - **API Used:** `decryptMessage(rawMessage, privateKey);` likely uses `RSA_private_decrypt(...)`.
+
+- **Security Considerations:**
+  - The asymmetric encryption approach enhances security by ensuring that data can only be decrypted by the intended recipient.
+
 
 ## Project Structure 🏗️
 
@@ -175,6 +219,5 @@ The client provides a command-line interface for interaction. You can use variou
 - **CLI Option**: `d`
 - **Raw Message**: `Exit`
 - **Response**: `Bye`
-
 
 Please refer to the source code for a more detailed understanding of the functionality.
